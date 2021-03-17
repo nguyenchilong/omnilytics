@@ -16,7 +16,7 @@ function App() {
     title: '',
     message: ''
   });
-  const [report, setReport] = useState('Report');
+  const [report, setReport] = useState({});
   const [isLoading, setLoading] = useState(false);
 
   // init call to check file download exist
@@ -24,6 +24,7 @@ function App() {
     const { data } = await instance.get('/init');
     if(data.status === 'SUCCESS') {
       setGenerate(data.data);
+      setReport(data.data);
     }
   }, []);
 
@@ -48,9 +49,24 @@ function App() {
     }
   }
   // hanlde Report button
-  const onReport = (e) => {
-    setReport(e.target.innerText);
-    alert(report);
+  const onReport = async (e) => {
+    setLoading(true)
+    const { data } = await instance.get('/report');
+    setLoading(false);
+    if(data.status === 'SUCCESS') {
+      setReport(data.data);
+      setError({
+        show: false,
+        title: '',
+        message: ''
+      });
+    } else {
+      setError({
+        show: true,
+        title: 'Error Get Report',
+        message: data.msg
+      });
+    }
   }
 
   return (
@@ -73,13 +89,16 @@ function App() {
               <a href={generate.filePath} target="_blank">{generate.filePath}</a>
             </Row>
             <Row md={12} className="mt-5">
-              <Button variant="primary" onClick={(e) => onReport(e)}>Report</Button>
+              <Button disabled={isLoading} variant="primary" onClick={(e) => onReport(e)}>
+                {isLoading ? 'Loading…' : 'Report'}
+              </Button>
             </Row>
             <Row md={12} className="mt-5 text-left">
-              <Form.Label className="col-md-12">Alphabetical String: {generate.string}</Form.Label>
-              <Form.Label className="col-md-12">Real Numbers: {generate.real}</Form.Label>
-              <Form.Label className="col-md-12">Integers: {generate.integer}</Form.Label>
-              <Form.Label className="col-md-12">Alphanumerics: {generate.strNumber}</Form.Label>
+              <h1>Total Printable:{'  '}</h1>
+              <Form.Label className="col-md-12">Alphabetical String: { report.string }</Form.Label>
+              <Form.Label className="col-md-12">Real Numbers: { report.real }</Form.Label>
+              <Form.Label className="col-md-12">Integers: { report.integer }</Form.Label>
+              <Form.Label className="col-md-12">Alphanumerics: { report.strNumber }</Form.Label>
             </Row>
           </Col>
           <Col md={3}>

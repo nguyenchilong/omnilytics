@@ -78,7 +78,7 @@ const writeFile = (data, filename) => {
  */
 const numberType = (value) => {
     if(typeof value !== 'number') return null;
-    return Number.isInteger(v) ? 'int' : 'real';
+    return Number.isInteger(value) ? 'integer' : 'real';
 }
 /**
  * make func detect is alphabetical or only number string
@@ -90,32 +90,27 @@ const stringType = (value) => {
         value = value.toString();
     const regex = /[a-zA-Z]/g;
     const found = value.match(regex);
-    return (found === null) ? 'str_number' : 'alphabetical';
+    return (found === null) ? 'strNumber' : 'string';
 }
 /**
  * make func to keep total objects for on json object
  */
-const keepTotalObject = () => {
+const keepTotalObject = (value) => {
     const pathFile = path.resolve(__dirname, '..', 'public', 'random', 'report.json');
     let jsonReport = {
-        integer: 1,
-        real: 1,
-        string: 1,
-        strNumber: 1
+        integer: 0,
+        real: 0,
+        string: 0,
+        strNumber: 0
     };
+    const _type = (typeof value === 'string') ? stringType(value) : numberType(value);
     if(fs.existsSync(pathFile)) {
         jsonReport = JSON.parse(fs.readFileSync(pathFile));
-        jsonReport.integer = (jsonReport.integer + 1);
-        jsonReport.real = (jsonReport.real + 1);
-        jsonReport.string = (jsonReport.string + 1);
-        jsonReport.strNumber = (jsonReport.strNumber + 1);
+        jsonReport[_type] = (jsonReport[_type] + 1);
+    } else {
+        jsonReport[_type] = 1;
     }
-    fs.writeFileSync(pathFile, JSON.stringify({
-        integer: jsonReport.integer,
-        real: jsonReport.real,
-        string: jsonReport.string,
-        strNumber: jsonReport.strNumber
-    }));
+    fs.writeFileSync(pathFile, JSON.stringify(jsonReport));
 }
 
 module.exports = {

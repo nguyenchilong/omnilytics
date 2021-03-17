@@ -27,29 +27,26 @@ router.post('/random', (req, res, next) => {
     const _max = _body.max || 10000;
     const _len = _body.len || 12;
     const _lenAlphaNumber = _body.lenAlphaNumber || 2;
-    const _int = func.randomNumber(_min, _max);
-    const _real = func.randomNumber(_min, _max, true);
-    const _str = func.randomString(_len);
-    const _strNumber = func.randomAlphaNumber(_lenAlphaNumber);
-    let printObject = `${_int}, ${_real}, ${_str}, ${_strNumber}`;
+    let items = [
+      func.randomNumber(_min, _max), 
+      func.randomNumber(_min, _max, true), 
+      func.randomString(_len), 
+      func.randomAlphaNumber(_lenAlphaNumber)
+    ];
+    let item = items[Math.floor(Math.random() * items.length)];
     const fileName = 'printable.txt';
     const fileExist = fs.existsSync(path.resolve(__dirname, '..', 'public', 'random', fileName));
-    printObject = fileExist ? `, ${printObject}` : printObject.trim();
+    const printObject = fileExist ? `, ${item}` : item.toString().trim();
     func.writeFile(printObject, fileName);
-    func.keepTotalObject();
+    func.keepTotalObject(item);
     res.json({
       status: constants.httpStatus.done,
-      msg: 'Random printable objects successfully',
+      msg: 'Random Printable Values',
       data: {
         filePath: `http://localhost:${constants.Server.port}/api/download/${fileName}`,
-        integer: _int,
-        real: _real,
-        string: _str,
-        strNumber: _strNumber
       }
     })
   } catch(error){
-    console.log(error);
     res.json({
       status: constants.httpStatus.error,
       msg: 'Error random printable objects'
@@ -68,11 +65,16 @@ router.get('/init', (req, res, next) => {
       filePath: '',
       integer: 0,
       real: 0,
-      string: '',
-      strNumber: ''
+      string: 0,
+      strNumber: 0
     };
     if(fileExist) {
       resObject.filePath = `http://localhost:${constants.Server.port}/api/download/${fileName}`
+      const totalObjects = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', 'public', 'random', 'report.json')));
+      resObject.integer = totalObjects.integer;
+      resObject.real = totalObjects.real;
+      resObject.string = totalObjects.string;
+      resObject.strNumber = totalObjects.strNumber;
     }
     res.json({
       status: constants.httpStatus.done,
@@ -98,10 +100,23 @@ router.get('/download/:fileName', (req, res, next) => {
 });
 
 /**
- * 
+ * make func to count total printable object already reandom
  */
 router.get('/report', (req, res, next) => {
-  
+  try {
+    const fileName = 'report.json';
+    const totalObjects = fs.readFileSync(path.resolve(__dirname, '..', 'public', 'random', fileName));
+    res.json({
+      status: constants.httpStatus.done,
+      msg: 'Total Printable',
+      data: JSON.parse(totalObjects)
+    });
+  } catch(error){
+    res.json({
+      status: constants.httpStatus.error,
+      msg: 'Error get total printable object'
+    })
+  }
 });
 
 module.exports = router;
